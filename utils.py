@@ -1,52 +1,48 @@
-""" Screener utils """
-import csv
-import requests
-from requests import RequestException
+"""
+    Utilities
+"""
+import re
+import time
+from datetime import datetime
+import logging
 
-# END_POINT = 'https://api.binance.com'
-# URL = 'https://api.binance.com/api/v3/ticker/price'
-# """ START HERE """
+import constant
 
-SYMBOLS_FILE_NAME = 'symbols.csv'
-
-
-# API get all exchange info but mostly is used to get all symbols in binance market
-URL1 = 'https://api.binance.com/api/v3/exchangeInfo'
-
-def crawl_symbols():
+def get_filename(prefix, extension, is_everyday=None):
     """
-        Crawling all symbols from binance market
-        and write down to csv <br/>
+        Return filename everyday with prefix
 
+        @Example: get_filename_everyday('test', 'csv', true)
+        will return: 'test_2021_02_21.csv'
     """
-        # TODO: new feature will be added later
-            # 1. A cron job will call this method
-    try:
-        print('Start crawling....')
-        json_res = requests.get(URL1).json()
-        header = ['symbols']
-        # Set newline = '' to trim blank line
-        with open (SYMBOLS_FILE_NAME, 'w', newline='') as file:
-            writer = csv.writer(file)
-            writer.writerow(header)
-            print('Start writing file....')
-            symbol_cnt = 0
-            # Write data
-            for element in json_res['symbols']:
-                # Each symbols will be stored different array
-                # example: ['ABC'] is known as a row in python
-                symbols = []
-                symbol = element['symbol']
-                symbols.append(symbol)
-                writer.writerow(symbols)
-                symbol_cnt += 1
-    except FileNotFoundError as ex:
-        print(str(ex))
-    except RequestException as req_excep:
-        print(str(req_excep))
+    if is_everyday is False:  # Every second
+        return prefix + '_' + re.sub('[ :]', '_', str(time.asctime())) + '.' + extension
+    elif is_everyday is True:
+        return prefix + '_' + re.sub('-', '_', str(datetime.now())[0:10]) + '.' + extension
     else:
-        print('\''+ SYMBOLS_FILE_NAME
-                +'\' has been successfully created with {} symbols.'.format(symbol_cnt))
+        return prefix + '.' + extension
 
-# TODO remove later
-crawl_symbols()
+
+def log(process_name, is_end_log=None, message=None):
+    """
+        Logger
+    """
+    logging.basicConfig(format=constant.FORMAT_LOG, datefmt=constant.FORMAT_DATE,
+                        filename=constant.FILE_NAME, level=logging.INFO)
+    if is_end_log is not None:
+        msg = '[INFO ] ' + 'Finish ' + process_name + " " + message
+        logging.info(msg)
+        print(msg)
+    else:
+        msg = '[INFO ] ' + 'Start ' + process_name
+        logging.info(msg)
+        print(msg)
+
+
+def error_log(process_name, message):
+    """ Error log"""
+    logging.basicConfig(format=constant.FORMAT_LOG, datefmt=constant.FORMAT_DATE,
+                        filename=constant.FILE_NAME, level=logging.ERROR)
+    msg = "[ERROR] " + process_name + " went wrong because of: "+ "\n" + message
+    logging.error(msg)
+    print(msg)
