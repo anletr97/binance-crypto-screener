@@ -74,10 +74,6 @@ def crawl_24h_price():
                     writer.writerow(row)
                     symbol_cnt += 1
                     files.append(file)
-            msg = '\'' + file_name + \
-            '\' has been successfully created for {} symbols.'.format(
-                symbol_cnt)
-            utils.log(constant.P_CRAWL_LAST_24H_PRICE, True, msg)
             return files
         else:
             raise res.raise_for_status()
